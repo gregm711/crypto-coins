@@ -117,4 +117,6 @@ def buy_coins(symbol, quantity):
 
 
 if __name__ == "__main__":
-	main()
+	run = input("Type in yes to run and re-allocate binance coins \n")
+	if run == "yes":
+		main()
