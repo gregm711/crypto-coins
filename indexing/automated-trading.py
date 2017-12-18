@@ -9,29 +9,41 @@ import pandas as pd
 from index import get_indexed_df
 import math
 import time
+
 dotenv_path = join(dirname(__file__),'.env')
 load_dotenv(dotenv_path)
 
 binance_api_key = os.environ.get("BINANCE_API_KEY")
 binance_api_secret = os.environ.get("BINANCE_API_SECRET")
-
 trading_fee = 0.001
+
 client = Client(binance_api_key, binance_api_secret)
+fixes = [{'coinmarketcap':'MIOTA', 'binance': 'IOTA'},{'coinmarketcap':'BCH', 'binance': 'BCC'}]
 
 def main():
 	balances = pd.DataFrame(client.get_account()['balances'])
 	df = get_indexed_df()
 	balances['symbol'] = balances['asset']
+	df['symbol'] = df['symbol'].apply(lambda x: fix_name(x))
 	merged_df = pd.merge(balances, df, on='symbol')
+
 	merged_df['free']= pd.to_numeric(merged_df['free'], errors='coerce')
 	merged_df['price_usd']= pd.to_numeric(merged_df['price_usd'], errors='coerce')
 	merged_df['percentage_market_cap']= pd.to_numeric(merged_df['percentage_market_cap'], errors='coerce')
 	merged_df['price_usd']= pd.to_numeric(merged_df['price_usd'], errors='coerce')
 	merged_df['free']= pd.to_numeric(merged_df['free'], errors='coerce')
+
 	total_value = get_account_value(merged_df)
 	projection = project_coins(merged_df, total_value)
+
 	reallocate_coins(projection)
 
+
+def fix_name(name):
+	for fix in fixes:
+		if fix['coinmarketcap'] == name:
+			name = fix['binance']
+	return name
 
 # Calculates the total value of the account in usd
 def get_account_value(df):
@@ -45,13 +57,13 @@ def get_account_value(df):
 def project_coins(df, account_value):
 	df['dollar_allocation'] = df['percentage_market_cap'] * account_value
 	df['coin_allocation'] = df['dollar_allocation'] / df['price_usd']
+	df['allocation_diff'] =  df['coin_allocation'] - df['free']
+	df['allocation_diff'] = df['allocation_diff'] * (1-trading_fee)
 	return df
 
 
 # preforms reallocation and bakes in trading fee
 def reallocate_coins(df):
-	df['allocation_diff'] =  df['coin_allocation'] - df['free']
-	df['allocation_diff'] = df['allocation_diff'] * (1-trading_fee)
 
 	# go through and sell off all coins that we have too much have
 	for i, row in df.iterrows():
@@ -84,8 +96,12 @@ def sell_coins(symbol, quantity):
 			except Exception as e:
 				print("failed with second quantity", e )
 				quantity = int(round(quantity, 0))
-				order = client.create_order(symbol= symbol + 'BTC',side=Client.SIDE_SELL,type=Client.ORDER_TYPE_MARKET,quantity=quantity)
-				print("success selling! ", order )
+				try:
+					order = client.create_order(symbol= symbol + 'BTC',side=Client.SIDE_SELL,type=Client.ORDER_TYPE_MARKET,quantity=quantity)
+					print("success selling! ", order )
+				except:
+					print("not going to work with this quantity", symbol, quantity)
+
 
 
 def buy_coins(symbol, quantity):
@@ -105,8 +121,11 @@ def buy_coins(symbol, quantity):
 			except Exception as e:
 				print("failed with second quantity", e )
 				quantity = int(round(quantity, 0))
-				order = client.create_order(symbol= symbol + 'BTC',side=Client.SIDE_BUY,type=Client.ORDER_TYPE_MARKET,quantity=quantity)
-				print("success buying! ", order )
+				try:
+					order = client.create_order(symbol= symbol + 'BTC',side=Client.SIDE_BUY,type=Client.ORDER_TYPE_MARKET,quantity=quantity)
+					print("success buying! ", order )
+				except:
+					print("not going to work with this quantity", symbol, quantity)
 
 
 
@@ -116,6 +135,6 @@ def buy_coins(symbol, quantity):
 
 
 if __name__ == "__main__":
-	run = input("Type in yes to run and re-allocate binance coins \n")
-	if run == "yes":
-		main()
+	# run = input("Type in yes to run and re-allocate binance coins \n")
+	# if run == "yes":
+	main()
