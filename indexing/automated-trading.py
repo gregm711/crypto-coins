@@ -56,12 +56,14 @@ def reallocate_coins(df):
 
 	# go through and sell off all coins that we have too much have
 	for i, row in df.iterrows():
-		if row['allocation_diff'] <= 0:
-			sell_coins(row['symbol'], math.fabs(row['allocation_diff']))
-			time.sleep(2)
+		if row['symbol'] != 'BTC':
+			if row['allocation_diff'] <= 0:
+				sell_coins(row['symbol'], math.fabs(row['allocation_diff']))
+				time.sleep(2)
 
 	# now that excess coins have been sold off and we have some BTC available for reallocation, go through and purchase coins
 	for i, row in df.iterrows():
+		if row['symbol'] != 'BTC':
 			if row['allocation_diff'] >= 0:
 				buy_coins(row['symbol'], math.fabs(row['allocation_diff']))
 				time.sleep(2)
