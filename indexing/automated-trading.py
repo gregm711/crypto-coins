@@ -33,8 +33,7 @@ def main():
 	reallocate_coins(projection)
 
 
-
-
+# Calculates the total value of the account in usd
 def get_account_value(df):
 	account_value = 0.0
 	for i, row in df.iterrows():
@@ -42,14 +41,14 @@ def get_account_value(df):
 	return account_value
 	
 	
-
+#  projects how many dollars and how many coins should be allocated based off of market cap and price
 def project_coins(df, account_value):
 	df['dollar_allocation'] = df['percentage_market_cap'] * account_value
 	df['coin_allocation'] = df['dollar_allocation'] / df['price_usd']
 	return df
 
 
-
+# preforms reallocation and bakes in trading fee
 def reallocate_coins(df):
 	df['allocation_diff'] =  df['coin_allocation'] - df['free']
 	df['allocation_diff'] = df['allocation_diff'] * (1-trading_fee)
@@ -68,7 +67,7 @@ def reallocate_coins(df):
 				buy_coins(row['symbol'], math.fabs(row['allocation_diff']))
 				time.sleep(2)
 
-
+# Sells off coins
 def sell_coins(symbol, quantity):
 	quantity = round(quantity, 2)
 	if quantity > 0.0:
