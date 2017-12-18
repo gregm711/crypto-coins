@@ -70,6 +70,7 @@ def reallocate_coins(df):
 def sell_coins(symbol, quantity):
 	quantity = round(quantity, 2)
 	if quantity > 0.0:
+		print("attempting to sell ", symbol, quantity)
 		try:
 			order = client.create_order(symbol= symbol + 'BTC',side=Client.SIDE_SELL,type=Client.ORDER_TYPE_MARKET,quantity=quantity)
 			print("success selling! ", order )
@@ -87,8 +88,10 @@ def sell_coins(symbol, quantity):
 
 
 def buy_coins(symbol, quantity):
+	
 	quantity = round(quantity, 2)
 	if quantity > 0.0:
+		print("attempting to buy ", symbol, quantity)
 		try:
 			order = client.create_order(symbol= symbol + 'BTC',side=Client.SIDE_BUY,type=Client.ORDER_TYPE_MARKET,quantity=quantity)
 			print("success buying! ", order )
