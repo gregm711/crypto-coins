@@ -1,5 +1,5 @@
 from binance.client import Client
-
+import numpy
 from binance.enums import *
 import os
 from os.path import join, dirname
@@ -25,18 +25,33 @@ def main():
 	df = get_indexed_df()
 	balances['symbol'] = balances['asset']
 	df['symbol'] = df['symbol'].apply(lambda x: fix_name(x))
+	top_ten = df['symbol'].values
 	merged_df = pd.merge(balances, df, on='symbol')
-
 	merged_df['free']= pd.to_numeric(merged_df['free'], errors='coerce')
 	merged_df['price_usd']= pd.to_numeric(merged_df['price_usd'], errors='coerce')
 	merged_df['percentage_market_cap']= pd.to_numeric(merged_df['percentage_market_cap'], errors='coerce')
 	merged_df['price_usd']= pd.to_numeric(merged_df['price_usd'], errors='coerce')
 	merged_df['free']= pd.to_numeric(merged_df['free'], errors='coerce')
-
 	total_value = get_account_value(merged_df)
 	projection = project_coins(merged_df, total_value)
+	# projection = add_turnover(projection, balances,top_ten)
+	print(projection.head(200))
+	# reallocate_coins(projection)
 
-	reallocate_coins(projection)
+
+
+
+
+def add_turnover(projection, balances,top_ten):
+	top_ten = numpy.append(top_ten,['BNB']) # add in binance coin for reduced fees
+	balances['free']= pd.to_numeric(balances['free'], errors='coerce')
+	balances = balances[balances['free'] >0]
+	turnover = balances[~balances['symbol'].isin(top_ten)]
+	print(turnover.head(20))
+	# print(projection.head(20))
+	return projection
+
+
 
 
 def fix_name(name):
@@ -59,6 +74,10 @@ def project_coins(df, account_value):
 	df['coin_allocation'] = df['dollar_allocation'] / df['price_usd']
 	df['allocation_diff'] =  df['coin_allocation'] - df['free']
 	df['allocation_diff'] = df['allocation_diff'] * (1-trading_fee)
+	df['dollar_allocation_diff'] = df['allocation_diff'] * df['price_usd']
+
+	df = df.sort_values(by=['allocation_diff'])
+	df = df.sort_values(by=['market_cap_usd'], ascending=False)
 	return df
 
 

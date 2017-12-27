@@ -20,6 +20,7 @@ def index(df):
 	df['percent_change_24h']= pd.to_numeric(df['percent_change_24h'], errors='coerce')
 	df['percentage_market_cap'] = (df['market_cap_usd'] / df['market_cap_usd'].sum())
 	total_day_change =((df['percent_change_24h'] * df['percentage_market_cap']).sum())/(len(df.index))
+
 	return df
 
 
