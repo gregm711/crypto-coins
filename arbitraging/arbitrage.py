@@ -33,6 +33,7 @@ polo = poloniex.Poloniex(poloniex_api_key,poloniex_api_secret)
 
 def main():
 	binance_ticker = pd.DataFrame(client.get_all_tickers())
+
 	poloniex_ticker = pd.DataFrame(polo.returnTicker())
 	prices = poloniex_ticker.loc["last"].values
 	columns = poloniex_ticker.columns
@@ -41,7 +42,12 @@ def main():
 	poloniex_reset['symbol'] = columns
 	poloniex_reset['symbol'] = poloniex_reset['symbol'].apply(lambda x: clean_poloniex_name(x))
 	merged_df = pd.merge(poloniex_reset,binance_ticker, on='symbol')
-	print(merged_df.head())
+	merged_df['price']= pd.to_numeric(merged_df['price'], errors='coerce')
+	merged_df['poloniex_price']= pd.to_numeric(merged_df['poloniex_price'], errors='coerce')
+	merged_df['percentage_difference'] = (merged_df['poloniex_price'] - merged_df['price']) / merged_df['poloniex_price']
+	merged_df['abs_diff'] = merged_df['percentage_difference'].apply(lambda x: math.fabs(x))
+	df = merged_df.sort_values(by=['abs_diff'], ascending=False)
+	print(df.head(20))
 
 
 	
