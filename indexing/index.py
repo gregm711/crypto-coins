@@ -10,6 +10,7 @@ def get_indexed_df():
 	tickers = requests.get(api_url + "ticker/")
 	df = pd.DataFrame(tickers.json())
 	df = index(df)
+	
 	return df
 
 

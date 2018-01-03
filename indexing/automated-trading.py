@@ -34,12 +34,14 @@ def main():
 	merged_df['free']= pd.to_numeric(merged_df['free'], errors='coerce')
 	total_value = get_account_value(merged_df)
 	projection = project_coins(merged_df, total_value)
-	# projection = add_turnover(projection, balances,top_ten)
-	print(projection.head(200))
+	projection = add_turnover(projection, balances,top_ten)
+	print(projection.head(20))
+
+	# print(projection.head(200))
 	# reallocate_coins(projection)
 
 
-
+# 68   BTG  0.20000  0.00000000    BTG
 
 
 def add_turnover(projection, balances,top_ten):
@@ -47,9 +49,13 @@ def add_turnover(projection, balances,top_ten):
 	balances['free']= pd.to_numeric(balances['free'], errors='coerce')
 	balances = balances[balances['free'] >0]
 	turnover = balances[~balances['symbol'].isin(top_ten)]
-	print(turnover.head(20))
-	# print(projection.head(20))
-	return projection
+	tmp_dicts = []
+	for i, row in turnover.iterrows():
+		tmp_dict = {"allocation_diff": (-1 * row["free"]), "symbol": row["symbol"], "asset": row["asset"]}
+		tmp_dicts.append(tmp_dict)
+	df = pd.DataFrame(tmp_dicts)
+	concat = pd.concat([projection, df])
+	return concat
 
 
 

@@ -5,6 +5,7 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pandas as pd 
+from scipy.optimize import fsolve
 
 import math
 import time
@@ -37,11 +38,7 @@ client = Client(binance_api_key, binance_api_secret)
 kucion_client = KucoinClient(kucoin_api_key, kucoin_api_secret)
 
 
-# get currencies
-currencies = kucion_client.get_currencies()
-# print(currencies)
-
-
+# percentage_difference 100 * |a - b| / ((a + b) * 2)
 fixes = [{'coinmarketcap':'MIOTA', 'binance': 'IOTA'},{'coinmarketcap':'BCH', 'binance': 'BCC'}]
 
 polo = poloniex.Poloniex(poloniex_api_key,poloniex_api_secret)
@@ -59,15 +56,36 @@ def main():
 	merged_df['price']= pd.to_numeric(merged_df['price'], errors='coerce')
 	merged_df['poloniex_price']= pd.to_numeric(merged_df['poloniex_price'], errors='coerce')
 	merged_df['ratio'] = (merged_df['poloniex_price'] /merged_df['price'])
-	merged_df['percentage_difference'] = (merged_df['poloniex_price'] - merged_df['price']) / merged_df['poloniex_price']
-	merged_df['abs_diff'] = merged_df['percentage_difference'].apply(lambda x: math.fabs(x))
+	
+	merged_df['percentage_difference'] = merged_df.apply(percentage_difference, axis=1)
+	# merged_df['abs_diff'] = merged_df['percentage_difference'].apply(lambda x: math.fabs(x))
 	merged_df['abs_ratio'] = merged_df['ratio'].apply(lambda x: math.fabs(x))
-	df = merged_df.sort_values(by=['abs_ratio'], ascending=False)
+	df = merged_df.sort_values(by=['percentage_difference'], ascending=False)
 	print(df.head(10))
 
 
 
+# percentage_difference = (math.fabs(price_one - price_two) / ((price_one + price_two) / 2)) 
+# given principal amount of btc, gives ratio that will be needed to break even
+def break_even(principal_btc, tf1,tf2,withdraw_fee2):
+	break_even_ratio = 1.0
+	return_btc = principal_btc * (1-tf1) * (1-tf2) * break_even_ratio - withdraw_fee2 
+	while True:
+		break_even_ratio = break_even_ratio + 0.00001
+		return_btc = principal_btc * (1-tf1) * (1-tf2) * break_even_ratio - withdraw_fee2 
+		if return_btc >= principal_btc:
+			break
+	return break_even_ratio
+	
+	
 
+
+
+def percentage_difference(row):
+	price_one = row['poloniex_price']
+	price_two = row['price']
+	result =  (math.fabs(price_one - price_two) / ((price_one + price_two) / 2)) * 100
+	return result
 
 
 def clean_poloniex_name(name):
@@ -85,4 +103,5 @@ def clean_poloniex_name(name):
 if __name__ == "__main__":
 	# run = input("Type in yes to run and re-allocate binance coins \n")
 	# if run == "yes":
-	main()
+	# main()
+	break_even(0.1, binance_trading_fee, poloniex_trading_fee, poloniex_bitcoin_withdrawl_fee)
