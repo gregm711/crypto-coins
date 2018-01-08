@@ -36,13 +36,21 @@ poloniex_client = poloniex.Poloniex(poloniex_api_key,poloniex_api_secret)
 
 def main():
 	while True:
-		print("running")
-		binance_price =  binance_client.get_ticker(symbol='GASBTC')['lastPrice']
-		poloniex_price = poloniex_client('returnTicker')['BTC_GAS']['last']
-		kucoin_price = kucion_client.get_tick('GAS-BTC')['lastDealPrice']
-		save_to_csv([poloniex_price, binance_price, kucoin_price])
-		print(poloniex_price, binance_price, kucoin_price)
+		try:
+			binance_price =  binance_client.get_ticker(symbol='GASBTC')['lastPrice']
+			poloniex_price = poloniex_client('returnTicker')['BTC_GAS']['last']
+			kucoin_price = kucion_client.get_tick('GAS-BTC')['lastDealPrice']
+			save_to_csv([poloniex_price, binance_price, kucoin_price])
+			print(poloniex_price, binance_price, kucoin_price)
+
+			binance_price =  binance_client.get_ticker(symbol='NEOBTC')['lastPrice']
+			kucoin_price = kucion_client.get_tick('NEO-BTC')['lastDealPrice']
+			save_neo_to_csv([binance_price, kucoin_price])
+			
+		except Exception as e:
+			print("errored: ", e)
 		time.sleep(30)
+
 
 def save_to_csv(prices):
 	now = time.time()
@@ -50,7 +58,16 @@ def save_to_csv(prices):
 	    fieldnames = ['poloniex_price', 'binance_price', 'kucoin_price', 'time']
 	    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 	    writer.writerow({'poloniex_price': prices[0], 'binance_price': prices[1], 'kucoin_price': prices[2], 'time':now})
-	   
+
+
+def save_neo_to_csv(prices):
+	now = time.time()
+	with open('neo-btc.csv', 'a') as csvfile:
+	    fieldnames = ['binance_price', 'kucoin_price', 'time']
+	    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+	    writer.writerow({'binance_price': prices[0], 'kucoin_price': prices[1], 'time':now})
+
+
 
 
 def clean_poloniex_name(name):

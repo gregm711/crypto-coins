@@ -56,16 +56,25 @@ def main():
 	merged_df['price']= pd.to_numeric(merged_df['price'], errors='coerce')
 	merged_df['poloniex_price']= pd.to_numeric(merged_df['poloniex_price'], errors='coerce')
 	merged_df['ratio'] = (merged_df['poloniex_price'] /merged_df['price'])
-	
 	merged_df['percentage_difference'] = merged_df.apply(percentage_difference, axis=1)
 	# merged_df['abs_diff'] = merged_df['percentage_difference'].apply(lambda x: math.fabs(x))
 	merged_df['abs_ratio'] = merged_df['ratio'].apply(lambda x: math.fabs(x))
 	df = merged_df.sort_values(by=['percentage_difference'], ascending=False)
+	print("finished")
 	print(df.head(10))
 
 
 
-# percentage_difference = (math.fabs(price_one - price_two) / ((price_one + price_two) / 2)) 
+
+def kucoin_balances():
+	pass
+
+
+def get_poloniex_balance():
+	balance = polo.returnBalances()
+	print(balance)
+
+
 # given principal amount of btc, gives ratio that will be needed to break even
 def break_even(principal_btc, tf1,tf2,withdraw_fee2):
 	break_even_ratio = 1.0
@@ -78,8 +87,6 @@ def break_even(principal_btc, tf1,tf2,withdraw_fee2):
 	return break_even_ratio
 	
 	
-
-
 
 def percentage_difference(row):
 	price_one = row['poloniex_price']
@@ -101,7 +108,6 @@ def clean_poloniex_name(name):
 
 
 if __name__ == "__main__":
-	# run = input("Type in yes to run and re-allocate binance coins \n")
-	# if run == "yes":
-	# main()
-	break_even(0.1, binance_trading_fee, poloniex_trading_fee, poloniex_bitcoin_withdrawl_fee)
+	# get_poloniex_balance()
+	main()
+	# break_even(0.1, binance_trading_fee, poloniex_trading_fee, poloniex_bitcoin_withdrawl_fee)
