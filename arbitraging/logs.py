@@ -1,15 +1,12 @@
 
 
 from binance.client import Client as BinanceClient
-import numpy
 from binance.enums import *
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
-import pandas as pd 
 import time
 import math
-import time
 import csv
 import poloniex
 
